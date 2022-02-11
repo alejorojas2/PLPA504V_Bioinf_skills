@@ -85,10 +85,13 @@ git remote add origin git@github.com:alejorojas2/Test.git
 git push -u origin main
 ```
 
+## How to set up SSH key for github
+
 
 ## Conda
 
 We will follow this tutorial by Astrobiomike: [An introduction to conda](https://astrobiomike.github.io/unix/conda-intro)
+
 
 
 

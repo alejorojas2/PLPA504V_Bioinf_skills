@@ -29,8 +29,15 @@ We’ll start by exploring how version control can be used to keep track of what
 
 "Piled Higher and Deeper" by Jorge Cham, http://www.phdcomics.com
 
-![image 1][id]
+![][id1]
+
+Version control systems start with a base version of the document and then record changes you make each step of the way. You can think of it as a recording of your progress: you can rewind to start at the base document and play back each change you made, eventually arriving at your more recent version.
+
+Once you think of changes as separate from the document itself, you can then think about “playing back” different sets of changes on the base document, ultimately resulting in different versions of that document. For example, two users can make independent sets of changes on the same document. Unless multiple users make changes to the same section of the document - a conflict - you can incorporate two sets of changes into the same base document.
+
+![][id2]
 
 
 
-[id]: Images/phd101212s.png
+[id1]: Images/phd101212s.png
+[id2]: Images/Version_control.png

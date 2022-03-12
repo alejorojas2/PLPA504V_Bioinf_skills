@@ -97,11 +97,131 @@ The last thing trimmomatic expects to see is the trimming parameters:
 Let's try this in our files:
 
 ```
-trimmomatic PE -threads 4 Sacc.R1.fastq Sacc.R2.fastq  \
-              Sacc.R1.trimmed.fastq Sacc.R1un.trimmed.fastq \
-              Sacc.R2.trimmed.fastq Sacc.R2un.trimmed.fastq \
-              ILLUMINACLIP:SRR_adapters.fa SLIDINGWINDOW:4:20
+trimmomatic PE -threads 4 Sacc.R1.fastq.gz Sacc.R2.fastq.gz  \
+              Sacc.R1_paired.trimmed.fastq.gz Sacc.R1_unpaired.trimmed.fastq.gz \
+              Sacc.R2_paired.trimmed.fastq.gz Sacc.R2_unpaired.trimmed.fastq.gz \
+              SLIDINGWINDOW:4:20 \
+              MINLEN:50 \
+              ILLUMINACLIP:adapters.fa:2:30:10 \
+              
 ```
+
+The command above is a single line, but since some scripts or even the monitor could cut the command, you can use backslash `\` to break the command into multiple lines.  Below I am going break down the command in parts to understand the whole process:
+
+* `trimmomatic PE -threads 4 Sacc.R1.fastq Sacc.R2.fastq` - using trimmomatic in pair-end (PE) mode to use 4 threads and we specify the input files in order `R1` followed by `R2`
+* `Sacc.R1_paired.trimmed.fastq.gz Sacc.R1_unpaired.trimmed.fastq.gz` - this part specifies two output files for reads in processed in `R1`: paired reads and unpaired reads.
+* `Sacc.R2_paired.trimmed.fastq.gz Sacc.R2_unpaired.trimmed.fastq.gz` - this part specifies two output files for reads processed in `R2`: paired reads and unpaired reads.
+* `SLIDINGWINDOW:4:20` - This parameter specifies the window analysis, `4` is how many bases to include in the sliding window and the __average__ quality.
+* `MINLEN:50` - This part specifies the minimum read length to keep, anything below is discarded
+* `ILLUMINACLIP:adapters.fa:2:30:10` - This parameter specifies the option for trimming adapters (i.e. illumina nextera), the numbers in order are: mismatches allowed;palindrome; simple (This numbers are scores and suggested values range between 7-15 for simple and 30 for palindrome)
+
+Ideally, this should be run as a script submitted to __SLURM__, in that case you should create a bash script using __nano__ as follows: `nano trim_job.sh` (you can use any name). the contents of that file will be:
+
+```#!/bin/bash
+#SBATCH --job-name=trim_jarojas
+#SBATCH --output=trim_job1.slurm
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=8
+$SBATCH --time=00:05:00
+#SBATCH --partition comp06
+
+module load python/anaconda-3.8
+source /share/apps/bin/conda-3.8.sh
+
+conda activate fastqc
+
+cd ~/Lecture_6
+
+trimmomatic -threads 4 Sacc.R1.fastq.gz Sacc.R2.fastq.gz \
+                       Sacc.R1_illumina.trimmed.fastq.gz Sacc.R1unpaired.trimmed.fastq.gz \
+                       Sacc.R2_illumina.trimmed.fastq.gz Sacc.R2unpaired.trimmed.fastq.gz \
+                       SLIDINGWINDOW:4:20 \
+                       MINLEN:50 \
+                       ILLUMINACLIP:adapters.fa:2:30:10
+
+```
+
+**Important note:** For the parameter illumina clip usually trimmomatic has folder that contains different examples of adapters used for illumina libraries:
+
+- TruSeq2 (as used in GAII machines) 
+- TruSeq3 (as used by HiSeq and MiSeq machines)
+- Nextera PE
+
+Since we installed using conda, the files for those adapters are hidden in the conda environment `~/.conda/envs/fastqc/share/trimmomatic/adapters/`, however we can make a file containing all the adapters.  Create a file named `adapters.fa` containing the following sequences:
+
+```
+>TruSeq3_IndexedAdapter
+AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+>TruSeq3_UniversalAdapter
+AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTA
+
+#TruSeq3-PE-2
+>PrefixPE/1
+TACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>PrefixPE/2
+GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT
+>PE1
+TACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>PE1_rc
+AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTA
+>PE2
+GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT
+>PE2_rc
+AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+
+#TruSeq3-PE
+>PrefixPE/1
+TACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>PrefixPE/2
+GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT
+
+TruSeq3-SE
+>TruSeq3_IndexedAdapter
+AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+>TruSeq3_UniversalAdapter
+AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTA
+
+#TruSeq2-SE
+>TruSeq2_SE
+AGATCGGAAGAGCTCGTATGCCGTCTTCTGCTTG
+>TruSeq2_PE_f
+AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT
+>TruSeq2_PE_r
+AGATCGGAAGAGCGGTTCAGCAGGAATGCCGAG
+
+#TruSeq2-PE
+>PrefixPE/1
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>PrefixPE/2
+CAAGCAGAAGACGGCATACGAGATCGGTCTCGGCATTCCTGCTGAACCGCTCTTCCGATCT
+>PCR_Primer1
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>PCR_Primer1_rc
+AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT
+>PCR_Primer2
+CAAGCAGAAGACGGCATACGAGATCGGTCTCGGCATTCCTGCTGAACCGCTCTTCCGATCT
+>PCR_Primer2_rc
+AGATCGGAAGAGCGGTTCAGCAGGAATGCCGAGACCGATCTCGTATGCCGTCTTCTGCTTG
+>FlowCell1
+TTTTTTTTTTAATGATACGGCGACCACCGAGATCTACAC
+>FlowCell2
+TTTTTTTTTTCAAGCAGAAGACGGCATACGA
+
+#Nextera
+>PrefixNX/1
+AGATGTGTATAAGAGACAG
+>PrefixNX/2
+AGATGTGTATAAGAGACAG
+>Trans1
+TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG
+>Trans1_rc
+CTGTCTCTTATACACATCTGACGCTGCCGACGA
+>Trans2
+GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG
+>Trans2_rc
+CTGTCTCTTATACACATCTCCGAGCCCACGAGAC
+```
+
 
 [id3]: Images/Illumina.png
 [id4]: Images/Parameters_1.png

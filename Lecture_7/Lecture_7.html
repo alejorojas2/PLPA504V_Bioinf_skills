@@ -174,7 +174,7 @@ pre code {
 <div id="qc-for-reads" class="section level1">
 <h1>QC for reads</h1>
 <p>Let’s start an interactive session:</p>
-<pre><code>srun --nodes=1 --ntasks-per-node=1  --cpus-per-task=8 --partition comp06 --time=6:00:00 --pty /bin/bash</code></pre>
+<pre><code>srun --nodes=1 --ntasks-per-node=1  --cpus-per-task=8 --partition cloud72 --time=6:00:00 --pty /bin/bash</code></pre>
 <p>Last class, we were talking about <a href="https://en.wikipedia.org/wiki/FASTQ_format">FASTQ format</a>.</p>
 <p>In FASTQ files, quality values are encoded by symbols and each of those symbols represent a number between 0 - 40. Quality scores are provided per base, in a log-10 scaled format. The likelihood of a base call being erroneous is 10 to the power of (-Q/10) - so for a Q value of 3, you get an error rate of 1/2, for a Q value of 30, you get an error rate of 0.001, and for a Q value of 40, you get an error rate of .0001.</p>
 <p>We already checked the qualities for our libraries, and we did using interactive session:</p>

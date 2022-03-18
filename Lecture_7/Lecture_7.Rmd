@@ -13,7 +13,7 @@ output:
 Let's start an interactive session:
 
 ```
-srun --nodes=1 --ntasks-per-node=1  --cpus-per-task=8 --partition comp06 --time=6:00:00 --pty /bin/bash
+srun --nodes=1 --ntasks-per-node=1  --cpus-per-task=8 --partition cloud72 --time=6:00:00 --pty /bin/bash
 ```
 
 Last class, we were talking about [FASTQ format](https://en.wikipedia.org/wiki/FASTQ_format).

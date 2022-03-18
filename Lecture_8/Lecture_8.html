@@ -201,7 +201,13 @@ gunzip Sbayanus_ASM1943126v1_genomic.fna.gz
 #Let&#39;s make a database
 makeblastdb -dbtype nucl -in Sbayanus_ASM1943126v1_genomic.fna</code></pre>
 <p>Now, we need to create a reduced file to check our sequences. Let’s install <a href="https://docs.csc.fi/apps/seqtk/">seqtk</a> for manipulating fasta and fastq files:</p>
-<pre><code>conda install -c bioconda seqtk
+<pre><code>#It is not available as module
+#Let&#39;s activate our conda environment
+
+module load python/anaconda-3.8
+source /share/apps/bin/conda-3.8.sh
+
+conda install -c bioconda seqtk
 </code></pre>
 <p>Now we are going to use Seqtk to manipulate our fastq file:</p>
 <pre><code>#Subsample 10 reads

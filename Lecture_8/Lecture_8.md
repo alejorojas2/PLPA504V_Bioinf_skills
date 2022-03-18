@@ -56,6 +56,12 @@ makeblastdb -dbtype nucl -in Sbayanus_ASM1943126v1_genomic.fna
 Now, we need to create a reduced file to check our sequences.  Let's install [seqtk](https://docs.csc.fi/apps/seqtk/) for manipulating fasta and fastq files:
 
 ```
+#It is not available as module
+#Let's activate our conda environment
+
+module load python/anaconda-3.8
+source /share/apps/bin/conda-3.8.sh
+
 conda install -c bioconda seqtk
 
 ```

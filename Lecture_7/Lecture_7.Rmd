@@ -117,7 +117,8 @@ The command above is a single line, but since some scripts or even the monitor c
 
 Ideally, this should be run as a script submitted to __SLURM__, in that case you should create a bash script using __nano__ as follows: `nano trim_job.sh` (you can use any name). the contents of that file will be:
 
-```#!/bin/bash
+```
+#!/bin/bash
 #SBATCH --job-name=trim_jarojas
 #SBATCH --output=trim_job1.slurm
 #SBATCH --nodes=1

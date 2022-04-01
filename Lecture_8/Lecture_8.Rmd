@@ -76,9 +76,68 @@ seqtk sample -s100 Sacc.R1_paired.trimmed.fastq.gz 10 > Sacc_sub1.fq
  seqtk seq -aQ64 -q20 Sacc_sub1.fq > Sacc_sub1.fa
 ```
 
-With this ready now we can use blast:
+With this ready now we can use blast, but before there are some key arguments to use for analysis.
+You can see a full list typing `blastn -help` to print a detailed list.
+
+### BLAST: some key arguments
+* -query - query file name (required)
+* -db - database file name (require)
+* -evalue - set the evalue cutoff
+* -max_target_seqs - max number of hit seqs to show
+* -num_alignments - max number of alignments to show
+* -num_threads - number of threads (parallel processing to run, 8 will be
+faster than 2)
+* -outfmt - specify a simpler format than the text format, try ‘-outfmt 6’ for
+tabular format
+* -subject - instead of doing a DB search, search for alignments between
+query sequence and 1 to many subject sequences. Useful when want to just
+see the alignment of 2 sequences already picked out from other analyses
 
 ```
-blastn -query Sacc_sub1.fa -db Sbayanus_ASM1943126v1_genomic.fna
+blastn -query Sacc_sub1.fa -db Sb
 
 ```
+
+We can modify the types of outputs of the blast, one of the most useful output is a tabulated format, 
+by using a `-outfmt 6` or `-outfmt 7`, the standard output will include:
+
+```
+ 
+   1.  qseqid      query or source (e.g., gene) sequence id
+   2.  sseqid      subject  or target (e.g., reference genome) sequence id
+   3.  pident      percentage of identical matches
+   4.  length      alignment length (sequence overlap)
+   5.  mismatch    number of mismatches
+   6.  gapopen     number of gap openings
+   7.  qstart      start of alignment in query
+   8.  qend        end of alignment in query
+   9.  sstart      start of alignment in subject
+  10.  send        end of alignment in subject
+  11.  evalue      expect value
+  12.  bitscore    bit score
+
+```
+
+But it can be redefined to `-outfmt "6 qseqid sseqid evalue"`, limiting the number of columns.
+
+How do submit a script `run_blast.sh`, let's put it together:
+
+```
+#!/bin/bash
+#SBATCH --job-name=blast_jarojas
+#SBATCH --output=blas_job1.slurm
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=4
+$SBATCH --time=00:05:00
+#SBATCH --partition comp06
+
+module blast/2.12.0+bin
+
+blastn -query Sacc_sub1.fa -db Sb -outfmt 6 -out reads-vs-Sbayanus.blastn.tab -num_threads 4
+
+```
+
+Now you can submit the job and check on it:
+
+* `$ sbatch run_blast.sh` Actual submission
+* `$ squeue -u $USER`  Check the submitted job

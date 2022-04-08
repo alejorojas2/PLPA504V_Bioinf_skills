@@ -29,7 +29,12 @@ For this, we are going to use tow genomes to map our reads to.  These are:
 We need to do a bit of housekeeping before we run the actual analysis. We will also  to create directories for the results that will be generated as part of this workflow. We can do this in a single line of code, because mkdir can accept multiple new directory names as input.
 
 ```
-mkdir -p results/sam results/bam results/bcf results/vcf
+mkdir -p data results/sam results/bam results/bcf results/vcf
+```
+
+Also, download our reference data:
+```
+git clone git@github.com:alejorojas2/PLPA504V_Bioinf_example_data.git
 ```
 
 # Index the reference genomes
@@ -67,10 +72,66 @@ The alignment process consists of choosing an appropriate reference genome to ma
 An example of what a bwa command looks like is below. This command will not run, as we do not have the files ref_genome.fa, input_file_R1.fastq, or input_file_R2.fastq.
 
 ```
-bwa mem ref_genome.fasta input_file_R1.fastq input_file_R2.fastq > output.sam
+bwa mem ref_genome.fasta input_file_R1.fastq input_file_R2.fastq > results/sam/Sacc_bayanu.S1.aligned.sam
 
 ```
 
+The SAM file, is a tab-delimited text file that contains information for each individual read and its alignment to the genome. While we do not have time to go into detail about the features of the SAM format, the paper by [Heng Li et al.](http://bioinformatics.oxfordjournals.org/content/25/16/2078.full) provides a lot more detail on the specification.
 
+The compressed binary version of SAM is called a BAM file. We use this version to reduce size and to allow for indexing, which enables efficient random access of the data contained within the file.
+
+The file begins with a header, which is optional. The header is used to describe the source of data, reference sequence, method of alignment, etc., this will change depending on the aligner being used. Following the header is the alignment section. Each line that follows corresponds to alignment information for a single read. Each alignment line has 11 mandatory fields for essential mapping information and a variable number of other fields for aligner specific information. An example entry from a SAM file is displayed below with the different fields highlighted.
+
+![][id1]
+
+We will convert the SAM file to BAM format using the samtools program with the view command and tell this command that the input is in SAM format (-S) and to output BAM format (-b):
+
+```
+
+module load samtools
+
+samtools view -S -b results/sam/Sacc_bayanu.S1.aligned.sam > results/bam/Sacc_bayanu.S1.aligned.bam
+
+```
+
+Next we sort the BAM file using the sort command from samtools. -o tells the command where to write the output.
+
+```
+samtools sort -o results/bam/Sacc_bayanu.S1.aligned.sorted.bam results/bam/Sacc_bayanu.S1.aligned.bam
+```
+
+You can use samtools to learn more about this bam file as well.
+
+```
+samtools flagstat results/bam/Sacc_bayanu.S1.aligned.sorted.bam
+
+```
+
+These has been our pipeline:
+
+![][id2]
+
+
+# Variant calling
+
+Do the first pass on variant calling by counting read coverage with bcftools. We will use the command mpileup. The flag -O b tells bcftools to generate a bcf format output file, -o specifies where to write the output file, and -f flags the path to the reference genome:
+
+```
+bcftools mpileup -O b -o results/bcf/Sacc_bayanu.bcf \
+          -f Saccharomyces_bayanus/Sbayanus_ASM1943126v1_genomic.fna 
+          results/bam/Sacc1.aligned.sorted.bam 
+
+```
+
+Identify SNVs using bcftools call. We have to specify ploidy with the flag `--ploidy`, which is one for the haploid _S. cerevisae_. 
+
+`-m` allows for multiallelic and rare-variant calling, `-v` tells the program to output variant sites only (not every site in the genome), and `-o` specifies where to write the output file:
+
+```
+bcftools call --ploidy 1 -m -v -o results/vcf/Sacc_bayanu_variants.vcf results/bcf/Sacc_bayanu.bcf 
+
+```
+[id1]: Images/sam_bam.png
+[id2]: Images/pipeline.png
 
 

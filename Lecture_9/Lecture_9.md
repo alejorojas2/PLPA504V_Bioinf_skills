@@ -90,36 +90,101 @@ We will convert the SAM file to BAM format using the samtools program with the v
 
 module load samtools
 
-samtools view -S -b results/sam/Sacc_bayanu.S1.aligned.sam > results/bam/Sacc_bayanu.S1.aligned.bam
+# Sbayanu
+samtools view -S -b sam/Sacc_bayanu.S1.aligned.sam > bam/Sacc_bayanu.S1.aligned.bam
+
+# Scerevisae
+samtools view -S -b sam/Sacc_cerevisae.S1.aligned.sam > bam/Sacc_cerevisae.S1.aligned.bam
 
 ```
 
-Next we sort the BAM file using the sort command from samtools. -o tells the command where to write the output.
+Next we sort the BAM file using the sort command from samtools. `-o` tells the command where to write the output.
 
 ```
-samtools sort -o results/bam/Sacc_bayanu.S1.aligned.sorted.bam results/bam/Sacc_bayanu.S1.aligned.bam
+# Sbayanu
+samtools sort -o bam/Sacc_bayanu.S1.aligned.sorted.bam bam/Sacc_bayanu.S1.aligned.bam
+
+# Scerevisae
+samtools sort -o bam/Sacc_cerevisae.S1.aligned.sorted.bam bam/Sacc_cerevisae.S1.aligned.bam
 ```
 
 You can use samtools to learn more about this bam file as well.
 
 ```
-samtools flagstat results/bam/Sacc_bayanu.S1.aligned.sorted.bam
+# Sbayanu
+samtools flagstat bam/Sacc_bayanu.S1.aligned.sorted.bam
+
+```
+This is the output for _S. bayanu_:
+
+```
+132126 + 0 in total (QC-passed reads + QC-failed reads)
+0 + 0 secondary
+6 + 0 supplementary
+0 + 0 duplicates
+34396 + 0 mapped (26.03% : N/A)
+132120 + 0 paired in sequencing
+66060 + 0 read1
+66060 + 0 read2
+30700 + 0 properly paired (23.24% : N/A)
+31144 + 0 with itself and mate mapped
+3246 + 0 singletons (2.46% : N/A)
+100 + 0 with mate mapped to a different chr
+34 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+
+Now, let's repeat it for _S. cerevisae_:
+
+```
+# Scerevisae
+samtools flagstat bam/Sacc_cerevisae.S1.aligned.sorted.bam
+
+#Output
+132198 + 0 in total (QC-passed reads + QC-failed reads)
+0 + 0 secondary
+78 + 0 supplementary
+0 + 0 duplicates
+126264 + 0 mapped (95.51% : N/A)
+132120 + 0 paired in sequencing
+66060 + 0 read1
+66060 + 0 read2
+124916 + 0 properly paired (94.55% : N/A)
+126042 + 0 with itself and mate mapped
+144 + 0 singletons (0.11% : N/A)
+122 + 0 with mate mapped to a different chr
+60 + 0 with mate mapped to a different chr (mapQ>=5)
 
 ```
 
-These has been our pipeline:
+This is our pipeline for the analysis so far:
 
 ![][id2]
 
 
+
 # Variant calling
+
+First we need to get bcftools in the server:
+
+```
+#It is not available as module
+#Let's activate our conda environment
+
+module load python/anaconda-3.8
+source /share/apps/bin/conda-3.8.sh
+
+conda activate fastqc
+
+conda install -c bioconda bcftools
+```
 
 Do the first pass on variant calling by counting read coverage with bcftools. We will use the command mpileup. The flag -O b tells bcftools to generate a bcf format output file, -o specifies where to write the output file, and -f flags the path to the reference genome:
 
+
 ```
-bcftools mpileup -O b -o results/bcf/Sacc_bayanu.bcf \
-          -f Saccharomyces_bayanus/Sbayanus_ASM1943126v1_genomic.fna 
-          results/bam/Sacc1.aligned.sorted.bam 
+bcftools mpileup -O b -o bcf/Sacc_bayanu.bcf \
+          -f ~/PLPA504V_Bioinf_example_data/Saccharomyces_bayanus//Sbayanus_ASM1943126v1_genomic.fna \
+          bam/Sacc_bayanu.S1.aligned.sorted.bam
 
 ```
 

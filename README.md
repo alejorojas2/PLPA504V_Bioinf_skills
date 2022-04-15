@@ -1,20 +1,20 @@
 # PLPA504V_Bioinf_skills
 
-Introduction to Bioinformatic skills.
+Introduction to Bioinformatic skills lectures:
 
-Lecture 1 and 2. Introduction to unix following ["Unix and Perl Primer for Biologists
+__Lecture 1 and 2.__ Introduction to unix following ["Unix and Perl Primer for Biologists
 " by Dr. Ian Korf](http://korflab.ucdavis.edu/Unix_and_Perl/current.html#part1)
 
-Lecture 3. Using AHPCC and using NCBI database
+__Lecture 3.__ Using AHPCC and using NCBI database
 
-Lecture 4. Accessing AHPCC modules and using conda
+__Lecture 4.__ Accessing AHPCC modules and using conda
 
-Lecture 5 and 6. [Writing scripts and scheduling jobs in SLURM](Lecture_6/Lecture_6.md)
+__Lecture 5 and 6.__ [Writing scripts and scheduling jobs in SLURM](Lecture_6/Lecture_6.md)
 
-Lecture 7. [FASTQC and Trimmomatic](Lecture_7/Lecture_7.md)
+__Lecture 7.__ [FASTQC and Trimmomatic](Lecture_7/Lecture_7.md)
 
-Lecture 8. [Seqtk to manipulate FASTQ/A and Local BLAST](Lecture_8/Lecture_8.knit.md)
+__Lecture 8.__ [Seqtk to manipulate FASTQ/A and Local BLAST](Lecture_8/Lecture_8.knit.md)
 
-Lecture 9. [Mapping to reference genomes using BWA](Lecture_9/Lecture_9.md)
+__Lecture 9.__ [Mapping to reference genomes using BWA](Lecture_9/Lecture_9.md)
 
-Lecture 10. [Using IGV to visualize genomic data](Lecture_10/Lecture_10.md)
+__Lecture 10.__ [Using IGV to visualize genomic data](Lecture_10/Lecture_10.md)

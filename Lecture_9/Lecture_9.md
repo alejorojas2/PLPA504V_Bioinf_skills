@@ -5,13 +5,56 @@ date: "4/1/2022"
 output: 
   html_document: 
     keep_md: yes
+    theme: readable
 ---
 
+# Initial preparation
 Let's start an interactive session:
 
 ```
 srun --nodes=1 --ntasks-per-node=1  --cpus-per-task=8 --partition cloud72 --time=6:00:00 --pty /bin/bash
 ```
+### Disclaimer 1
+
+The original protocol described below was using the reference genomes as they are available in NCBI, therefore
+some the headlines (or taglines in the fasta) are long strings of characters, you could include the following step to
+rename all the fasta sequences to a shorter name:
+
+```
+#Renaming fasta headers in reference genomes
+awk '/^>/ {print ">Chr" ++i; next}{print}' GCF_000146045.2_R64_genomic.fna > Scerevisiae_renamed.fa
+
+awk '/^>/ {print ">Chr" ++i; next}{print}' Sbayanus_ASM1943126v1_genomic.fna > Sbayanus_renamed.fa
+
+```
+
+It will also be key to index the genomes with samtools either at this point or later.  For that, we use the 
+fasta file for the genome and index it.  The resulting file will be a `<ref>.fasta.fai` file.
+
+```
+samtools faidx Scerevisiae_renamed.fa
+samtools faidx Sbayanus_renamed.fa
+
+```
+
+### Disclaimer 2
+
+Please remember the paths were you input or output file should be located.  Always you 
+have to be aware of the path or either use a relative or absolute path.
+
+__This is an absolute path__:
+`/home/<USER>/PLPA504V_Bioinf_example_data/Lecture_9_ready/results/bam`
+
+__Relative path for same folder___:
+`~/PLPA504V_Bioinf_example_data/Lecture_9_ready/results/bam`
+
+__Make sure that you use__:
+
+* ` ../` to access one folder up
+* `./` to access the current folder
+* `~/` to access the home folder
+
+# Preparing for mapping reads against a reference (or multiple) genomes
 
 Now that we have reads that are clean after the quality review and trimming we can start looking a comparing with a genome or eventually assembling a genome.
 
@@ -72,7 +115,11 @@ The alignment process consists of choosing an appropriate reference genome to ma
 An example of what a bwa command looks like is below. This command will not run, as we do not have the files ref_genome.fa, input_file_R1.fastq, or input_file_R2.fastq.
 
 ```
-bwa mem ref_genome.fasta input_file_R1.fastq input_file_R2.fastq > results/sam/Sacc_bayanu.S1.aligned.sam
+#Map reads to the reference genome of Saccharomyces cerevisiae
+bwa mem ../data/reference/Scerevisiae_renamed.fa ../data/reads/Sacc.R1_paired.trimmed.fastq.gz ../data/reads/Sacc.R2_paired.trimmed.fastq.gz > sam/Sacc_cer.aligned_renamed.sam
+
+#Map reads to the reference genome of Saccharomyces bayanus
+bwa mem ../data/reference/Sbayanus_renamed.fa ../data/reads/Sacc.R1_paired.trimmed.fastq.gz ../data/reads/Sacc.R2_paired.trimmed.fastq.gz > sam/Sacc_bayanu.aligned_renamed.sam
 
 ```
 
@@ -91,29 +138,29 @@ We will convert the SAM file to BAM format using the samtools program with the v
 module load samtools
 
 # Sbayanu
-samtools view -S -b sam/Sacc_bayanu.S1.aligned.sam > bam/Sacc_bayanu.S1.aligned.bam
+samtools view -S -b sam/Sacc_cer.aligned_renamed.sam > bam/Sacc_cer.renamed.aligned.bam
 
 # Scerevisae
-samtools view -S -b sam/Sacc_cerevisae.S1.aligned.sam > bam/Sacc_cerevisae.S1.aligned.bam
+samtools view -S -b sam/Sacc_bayanu.aligned_renamed.sam > bam/Sacc_bayanu.renamed.aligned.bam
 
 ```
 
-Next we sort the BAM file using the sort command from samtools. `-o` tells the command where to write the output.
+Next we sort the BAM file using the sort command from samtools. In this case, we are sorting reads mapped by __coordinates__ as they mapped in the genome.
+The flag `-o` tells the command where to write the output.
 
 ```
 # Sbayanu
-samtools sort -o bam/Sacc_bayanu.S1.aligned.sorted.bam bam/Sacc_bayanu.S1.aligned.bam
+samtools sort -o bam/Sacc_bayanu.renamed.aligned.sorted.bam bam/Sacc_bayanu.renamed.aligned.bam
 
 # Scerevisae
-samtools sort -o bam/Sacc_cerevisae.S1.aligned.sorted.bam bam/Sacc_cerevisae.S1.aligned.bam
+samtools sort -o bam/Sacc_cer.renamed.aligned.sorted.bam bam/Sacc_cer.renamed.aligned.bam
 ```
 
 You can use samtools to learn more about this bam file as well.
 
 ```
 # Sbayanu
-samtools flagstat bam/Sacc_bayanu.S1.aligned.sorted.bam
-
+samtools flagstat bam/Sacc_bayanu.renamed.aligned.sorted.bam
 ```
 This is the output for _S. bayanu_:
 
@@ -137,7 +184,7 @@ Now, let's repeat it for _S. cerevisae_:
 
 ```
 # Scerevisae
-samtools flagstat bam/Sacc_cerevisae.S1.aligned.sorted.bam
+samtools flagstat bam/Sacc_cer.renamed.aligned.sorted.bam
 
 #Output
 132198 + 0 in total (QC-passed reads + QC-failed reads)
@@ -178,22 +225,49 @@ conda activate fastqc
 conda install -c bioconda bcftools
 ```
 
-Do the first pass on variant calling by counting read coverage with bcftools. We will use the command mpileup. The flag -O b tells bcftools to generate a bcf format output file, -o specifies where to write the output file, and -f flags the path to the reference genome:
+Do the first pass on variant calling by counting read coverage with bcftools. We 
+will use the command mpileup. 
+
+* `-O b` tells bcftools to generate a bcf format output file
+* `-o` specifies where to write the output file
+* `-f` flags the path to the reference genome
 
 
 ```
+#Original
 bcftools mpileup -O b -o bcf/Sacc_bayanu.bcf \
-          -f ~/PLPA504V_Bioinf_example_data/Saccharomyces_bayanus//Sbayanus_ASM1943126v1_genomic.fna \
-          bam/Sacc_bayanu.S1.aligned.sorted.bam
+          -f ~/PLPA504V_Bioinf_example_data/Saccharomyces_bayanus/Sbayanus_ASM1943126v1_genomic.fna \
+          bam/Sacc_bayanu.aligned.sorted.bam
+
+bcftools mpileup -O b -o bcf/Sacc_cerevisae.bcf \
+          -f ~/PLPA504V_Bioinf_example_data/Saccharomyces_cerevisae/GCF_000146045.2_R64_genomic.fna \
+          bam/Sacc_cer.aligned.sorted.bam
+```
+
+This is the corrected version using the renamed files:
+
+```
+#S bayanau
+bcftools mpileup -O b -o bcf/Sacc_cer.renamed.bcf -f ../data/reference/Scerevisiae_renamed.fa bam/Sacc_cer.renamed.aligned.sorted.bam
+
+#S cerevisae
+bcftools mpileup -O b -o bcf/Sacc_bayanus.renamed.bcf -f ../data/reference/Sbayanus_renamed.fa bam/Sacc_bayanu.renamed.aligned.sorted.bam
 
 ```
 
-Identify SNVs using bcftools call. We have to specify ploidy with the flag `--ploidy`, which is one for the haploid _S. cerevisae_. 
+Identify SNVs using bcftools call. We have to specify ploidy with the flag `--ploidy`, which is one for the haploid _S. cerevisae_. The other
+parameters are:
 
-`-m` allows for multiallelic and rare-variant calling, `-v` tells the program to output variant sites only (not every site in the genome), and `-o` specifies where to write the output file:
+* `-m` allows for multiallelic and rare-variant calling
+* `-v` tells the program to output variant sites only (not every site in the genome)
+* `-o` specifies where to write the output file
 
 ```
-bcftools call --ploidy 1 -m -v -o results/vcf/Sacc_bayanu_variants.vcf results/bcf/Sacc_bayanu.bcf 
+#S bayanu
+bcftools call --ploidy 1 -m -v -o vcf/Sacc_cer.renamed.vcf bcf/Sacc_cer.renamed.bcf
+
+#S cerevisae
+bcftools call --ploidy 1 -m -v -o vcf/Sacc_bayanus.renamed.vcf bcf/Sacc_bayanus.renamed.bcf
 
 ```
 [id1]: Images/sam_bam.png

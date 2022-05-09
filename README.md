@@ -20,3 +20,5 @@ __Lecture 9.__ [Mapping to reference genomes using BWA](Lecture_9/Lecture_9.md)
 __Lecture 10.__ [Using IGV to visualize genomic data](Lecture_10/Lecture_10.md)
 
 __Lecture 11.__ [Assembling genomes](Lecture_11/Lecture_11.md)
+
+__Lecture 12.__ [Downloading data from EBI/NCBI](Lecture_12/Lecture_12.md)

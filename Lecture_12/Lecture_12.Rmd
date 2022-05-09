@@ -90,5 +90,3 @@ We observe that two fastq files have been extracted from SRR2121685.sra. This is
 
 
 [id1]: Images/Image1.jpeg
-[id2]: Images/Step2.png
-[id3]: Images/Step3.png
